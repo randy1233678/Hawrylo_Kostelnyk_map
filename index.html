@@ -3,35 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Інтерактивна мапа: Гавриїл Костельник</title>
+    <title>Гавриїл Костельник: Інтерактивна мапа</title>
     
-    <!-- Підключаємо стилі бібліотеки Leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     
     <style>
-        body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { margin: 0; padding: 0; font-family: 'Helvetica Neue', Arial, sans-serif; background: #f0ede5; }
         #map { width: 100vw; height: 100vh; }
         
-        /* Стилізація спливаючого вікна */
         .custom-popup .leaflet-popup-content-wrapper {
-            background: #fdfbf7;
-            color: #333;
-            border-radius: 6px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            background: #fff;
+            border-radius: 12px;
+            padding: 10px;
+            border: 1px solid #2c3e50;
         }
-        .custom-popup h3 { 
-            margin: 0 0 8px 0; 
-            border-bottom: 2px solid #6b5b4e; 
-            padding-bottom: 5px; 
-            color: #4a3f36; 
+
+        .leaflet-popup-content {
+            max-width: 250px;
+            font-size: 14px;
         }
-        .custom-popup p { margin: 0; font-size: 14px; line-height: 1.5; }
-        .custom-popup .years { 
-            font-weight: bold; 
-            color: #8a7b6e; 
-            font-size: 12px; 
-            display: block; 
-            margin-bottom: 8px; 
+
+        .custom-popup h3 {
+            margin: 0 0 10px;
+            color: #c0392b;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 5px;
+        }
+
+        .popup-event {
+            margin-bottom: 12px;
+            padding-left: 10px;
+            border-left: 3px solid #2c3e50;
+        }
+
+        .popup-event b {
+            color: #2c3e50;
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .popup-event span {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        .marker-content {
+            color: #fff;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 3px solid #fff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease, background-color 0.3s ease;
+            position: relative;
+        }
+
+        .marker-wrapper.active .marker-content {
+            transform: scale(1.3);
+        }
+
+        /* FIX: hover через клас, а не transform напряму */
+        .marker-wrapper.hover .marker-content {
+            transform: scale(1.2);
+        }
+
+        .marker-number {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #e67e22;
+            color: white;
+            font-size: 10px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid white;
+            font-weight: bold;
+        }
+
+        .legend {
+            background: white;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 13px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
         }
     </style>
 </head>
@@ -40,102 +102,146 @@
 <div id="map"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
+
 <script>
-    // Зберігаємо початкові налаштування для повернення
-    const defaultCenter = [48.0, 22.0];
-    const defaultZoom = 5;
-    const focusZoom = 9; // Наскільки сильно наближати карту при кліку на місто
+    const map = L.map('map', { 
+        minZoom: 4, 
+        maxZoom: 10, // ПОВЕРНУТО ЯК БУЛО
+        zoomControl: true 
+    }).setView([48.0, 22.0], 5);
 
-    // 1. Ініціалізуємо мапу з обмеженням мінімального масштабу (minZoom)
-    const map = L.map('map', {
-        minZoom: 4, // Користувач не зможе віддалити карту далі цього значення
-        maxZoom: 14 // Обмеження максимального наближення
-    }).setView(defaultCenter, defaultZoom);
+    // Карта (твоя логіка, без бага з pane)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png').addTo(map);
 
-    // Додаємо тайли (карту)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
+        opacity: 0.8
     }).addTo(map);
 
-    // База даних локацій
     const locations = [
-        {
-            name: "Руський Керестур",
-            lat: 45.5631, lng: 19.4144,
-            years: "1886",
-            text: "Місце народження. Важливий духовний і культурний центр бачвансько-сремських русинів."
+        { id: 1, name: "Руський Керестур", coords: [45.5631, 19.4144], icon: "fa-baby", desc: "<b>1886:</b> Місце народження." },
+        { id: 2, name: "Загреб", coords: [45.8150, 15.9819], icon: "fa-book", desc: "<b>1906:</b> Початок навчання." },
+        { id: 3, name: "Рим", coords: [41.9028, 12.4964], icon: "fa-columns", desc: "<b>1907–1911:</b> Навчання." },
+        { id: 4, name: "Фрібург", coords: [46.8065, 7.1620], icon: "fa-graduation-cap", desc: "<b>1913:</b> Дисертація." },
+        { id: 5, name: "Перемишль", coords: [49.7833, 22.7667], icon: "fa-church", desc: "<b>1910–1918:</b> Робота." },
+        { id: "6-8", name: "Львів", coords: [49.8397, 24.0297], icon: "fa-landmark", 
+          isHub: true,
+          events: [
+              { date: "1920–1944", title: "Розквіт", text: "Професор." },
+              { date: "1948", title: "Загибель", text: "Вбивство." }
+          ]
         },
-        {
-            name: "Загреб",
-            lat: 45.8150, lng: 15.9819,
-            years: "1906 - 1907",
-            text: "Навчання в класичній гімназії та початок богословських студій."
-        },
-        {
-            name: "Рим",
-            lat: 41.9028, lng: 12.4964,
-            years: "1907 - 1911",
-            text: "Навчання в Папському Урбаніянському університеті (Колегія «Пропаганда Фіде»)."
-        },
-        {
-            name: "Фрібург",
-            lat: 46.8065, lng: 7.1620,
-            years: "1913",
-            text: "Захист докторської дисертації з філософії у Фрібурзькому університеті."
-        },
-        {
-            name: "Перемишль",
-            lat: 49.7833, lng: 22.7667,
-            years: "1910-ті",
-            text: "Взаємодія з місцевим осередком та єпископатом греко-католицької церкви."
-        },
-        {
-            name: "Львів",
-            lat: 49.8397, lng: 24.0297,
-            years: "1920 - 1948",
-            text: "Головний центр діяльності. Викладання в Богословській академії, служба у Преображенській церкві, організація Львівського псевдособору 1946 року та трагічне вбивство."
-        },
-        {
-            name: "Москва",
-            lat: 55.7558, lng: 37.6173,
-            years: "1945 - 1946",
-            text: "Складні переговори з керівництвом Російської православної церкви та радянською владою щодо долі УГКЦ."
-        }
+        { id: 7, name: "Москва", coords: [55.7558, 37.6173], icon: "fa-file-signature", desc: "<b>1945:</b> Переговори." }
     ];
 
-    // Додаємо маркери та логіку кліків
-    locations.forEach(loc => {
-        const marker = L.marker([loc.lat, loc.lng]).addTo(map);
-        
-        const popupContent = `
-            <div class="custom-popup">
-                <h3>${loc.name}</h3>
-                <span class="years">${loc.years}</span>
-                <p>${loc.text}</p>
-            </div>
-        `;
-        
-        // Прив'язуємо вікно до маркера
-        marker.bindPopup(popupContent);
+    const pathOrder = [0, 1, 2, 3, 4, 5, 6, 5];
 
-        // 2. Логіка: при кліку на маркер плавно "летимо" до нього
-        marker.on('click', function(e) {
-            // Замість різкого перемикання використовуємо flyTo для красивої анімації
-            map.flyTo([loc.lat, loc.lng], focusZoom, {
-                animate: true,
-                duration: 1.5 // Тривалість анімації в секундах
+    function getBezierPoints(start, end, bend = 0.25) {
+        const pts = [];
+        const midLat = (start[0] + end[0]) / 2 + (end[1] - start[1]) * bend;
+        const midLng = (start[1] + end[1]) / 2 - (end[0] - start[0]) * bend;
+        const cp = [midLat, midLng];
+
+        // оптимізовано
+        for (let t = 0; t <= 1; t += 0.05) {
+            const lat = (1 - t) * (1 - t) * start[0] + 2 * (1 - t) * t * cp[0] + t * t * end[0];
+            const lng = (1 - t) * (1 - t) * start[1] + 2 * (1 - t) * t * cp[1] + t * t * end[1];
+            pts.push([lat, lng]);
+        }
+        return pts;
+    }
+
+    for (let i = 0; i < pathOrder.length - 1; i++) {
+        const start = locations[pathOrder[i]].coords;
+        const end = locations[pathOrder[i+1]].coords;
+        const bend = (i === 6) ? -0.35 : 0.25;
+
+        const curvePoints = getBezierPoints(start, end, bend);
+        const line = L.polyline(curvePoints, { color: '#2c3e50', weight: 3, opacity: 0.5 }).addTo(map);
+
+        L.polylineDecorator(line, {
+            patterns: [{
+                offset: '55%', repeat: 0,
+                symbol: L.Symbol.arrowHead({
+                    pixelSize: 14,
+                    polygon: true,
+                    pathOptions: { color: '#2c3e50', fillOpacity: 1, stroke: false }
+                })
+            }]
+        }).addTo(map);
+    }
+
+    const getColor = (loc) => {
+        if (loc.isHub) return '#c0392b';
+        if (loc.name === "Рим") return '#8e44ad';
+        return '#2c3e50';
+    };
+
+    let activeMarker = null;
+
+    locations.forEach((loc, idx) => {
+        const customIcon = L.divIcon({
+            className: 'marker-wrapper',
+            html: `<div class="marker-content" style="background-color:${getColor(loc)}">
+                   <i class="fa-solid ${loc.icon}"></i>
+                   <div class="marker-number">${idx + 1}</div></div>`,
+            iconSize: [36, 36], iconAnchor: [18, 18]
+        });
+
+        const marker = L.marker(loc.coords, { icon: customIcon }).addTo(map);
+
+        let content = `<div class="custom-popup"><h3>${loc.name}</h3>`;
+        if (loc.isHub) {
+            loc.events.forEach(e => {
+                content += `<div class="popup-event"><span>${e.date}</span><b>${e.title}</b>${e.text}</div>`;
             });
+        } else {
+            content += `<p>${loc.desc}</p>`;
+        }
+        content += `</div>`;
+
+        marker.bindPopup(content);
+
+        marker.on('click', () => {
+            if (activeMarker) activeMarker.classList.remove('active');
+            activeMarker = marker.getElement();
+            activeMarker.classList.add('active');
+            map.flyTo(loc.coords, 8, { duration: 1.5 });
+        });
+
+        // FIXED hover
+        marker.on('mouseover', () => {
+            marker.getElement().classList.add('hover');
+        });
+
+        marker.on('mouseout', () => {
+            marker.getElement().classList.remove('hover');
         });
     });
 
-    // 3. Логіка: при закритті вікна (клік повз нього) повертаємося до загального виду
-    map.on('popupclose', function() {
-        map.flyTo(defaultCenter, defaultZoom, {
-            animate: true,
-            duration: 1.5
-        });
+    // ПОВЕРНЕНА твоя логіка
+    map.on('popupclose', () => {
+        if (activeMarker) activeMarker.classList.remove('active');
+        map.flyTo([48.0, 22.0], 5, { duration: 1.5 });
     });
+
+    // легенда
+    const legend = L.control({ position: "bottomright" });
+
+    legend.onAdd = function () {
+        const div = L.DomUtil.create("div", "legend");
+        div.innerHTML = `
+            <b>Легенда</b><br>
+            👶 Народження<br>
+            📚 Навчання<br>
+            ⛪ Служіння<br>
+            ⚰️ Події
+        `;
+        return div;
+    };
+
+    legend.addTo(map);
+
 </script>
-
 </body>
 </html>
