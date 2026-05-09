@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Інтерактивна мапа: Гавриїл Костельник</title>
+    
+    <!-- Підключаємо стилі бібліотеки Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        #map { width: 100vw; height: 100vh; }
+        
+        /* Стилізація спливаючого вікна */
+        .custom-popup .leaflet-popup-content-wrapper {
+            background: #fdfbf7;
+            color: #333;
+            border-radius: 6px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .custom-popup h3 { 
+            margin: 0 0 8px 0; 
+            border-bottom: 2px solid #6b5b4e; 
+            padding-bottom: 5px; 
+            color: #4a3f36; 
+        }
+        .custom-popup p { margin: 0; font-size: 14px; line-height: 1.5; }
+        .custom-popup .years { 
+            font-weight: bold; 
+            color: #8a7b6e; 
+            font-size: 12px; 
+            display: block; 
+            margin-bottom: 8px; 
+        }
+    </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    // Зберігаємо початкові налаштування для повернення
+    const defaultCenter = [48.0, 22.0];
+    const defaultZoom = 5;
+    const focusZoom = 9; // Наскільки сильно наближати карту при кліку на місто
+
+    // 1. Ініціалізуємо мапу з обмеженням мінімального масштабу (minZoom)
+    const map = L.map('map', {
+        minZoom: 4, // Користувач не зможе віддалити карту далі цього значення
+        maxZoom: 14 // Обмеження максимального наближення
+    }).setView(defaultCenter, defaultZoom);
+
+    // Додаємо тайли (карту)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // База даних локацій
+    const locations = [
+        {
+            name: "Руський Керестур",
+            lat: 45.5631, lng: 19.4144,
+            years: "1886",
+            text: "Місце народження. Важливий духовний і культурний центр бачвансько-сремських русинів."
+        },
+        {
+            name: "Загреб",
+            lat: 45.8150, lng: 15.9819,
+            years: "1906 - 1907",
+            text: "Навчання в класичній гімназії та початок богословських студій."
+        },
+        {
+            name: "Рим",
+            lat: 41.9028, lng: 12.4964,
+            years: "1907 - 1911",
+            text: "Навчання в Папському Урбаніянському університеті (Колегія «Пропаганда Фіде»)."
+        },
+        {
+            name: "Фрібург",
+            lat: 46.8065, lng: 7.1620,
+            years: "1913",
+            text: "Захист докторської дисертації з філософії у Фрібурзькому університеті."
+        },
+        {
+            name: "Перемишль",
+            lat: 49.7833, lng: 22.7667,
+            years: "1910-ті",
+            text: "Взаємодія з місцевим осередком та єпископатом греко-католицької церкви."
+        },
+        {
+            name: "Львів",
+            lat: 49.8397, lng: 24.0297,
+            years: "1920 - 1948",
+            text: "Головний центр діяльності. Викладання в Богословській академії, служба у Преображенській церкві, організація Львівського псевдособору 1946 року та трагічне вбивство."
+        },
+        {
+            name: "Москва",
+            lat: 55.7558, lng: 37.6173,
+            years: "1945 - 1946",
+            text: "Складні переговори з керівництвом Російської православної церкви та радянською владою щодо долі УГКЦ."
+        }
+    ];
+
+    // Додаємо маркери та логіку кліків
+    locations.forEach(loc => {
+        const marker = L.marker([loc.lat, loc.lng]).addTo(map);
+        
+        const popupContent = `
+            <div class="custom-popup">
+                <h3>${loc.name}</h3>
+                <span class="years">${loc.years}</span>
+                <p>${loc.text}</p>
+            </div>
+        `;
+        
+        // Прив'язуємо вікно до маркера
+        marker.bindPopup(popupContent);
+
+        // 2. Логіка: при кліку на маркер плавно "летимо" до нього
+        marker.on('click', function(e) {
+            // Замість різкого перемикання використовуємо flyTo для красивої анімації
+            map.flyTo([loc.lat, loc.lng], focusZoom, {
+                animate: true,
+                duration: 1.5 // Тривалість анімації в секундах
+            });
+        });
+    });
+
+    // 3. Логіка: при закритті вікна (клік повз нього) повертаємося до загального виду
+    map.on('popupclose', function() {
+        map.flyTo(defaultCenter, defaultZoom, {
+            animate: true,
+            duration: 1.5
+        });
+    });
+</script>
+
+</body>
+</html>
