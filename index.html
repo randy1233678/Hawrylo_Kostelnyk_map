@@ -15,13 +15,19 @@
         .custom-popup .leaflet-popup-content-wrapper {
             background: #fff;
             border-radius: 12px;
-            padding: 10px;
+            padding: 0;
             border: 1px solid #2c3e50;
+            overflow: hidden;
         }
 
         .leaflet-popup-content {
-            max-width: 250px;
+            margin: 0;
+            max-width: 320px;
             font-size: 14px;
+        }
+
+        .popup-header {
+            padding: 15px 15px 5px 15px;
         }
 
         .custom-popup h3 {
@@ -29,6 +35,39 @@
             color: #c0392b;
             border-bottom: 2px solid #eee;
             padding-bottom: 5px;
+        }
+
+        /* Блок для фотографій (540x450) */
+        .popup-photo-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            background: #f9f9f9;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .popup-photo {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 540 / 450;
+            object-fit: cover;
+            display: block;
+        }
+
+        .popup-photo-caption {
+            font-size: 11px;
+            color: #7f8c8d;
+            font-style: italic;
+            text-align: center;
+            padding: 8px 10px 0;
+            margin: 0;
+        }
+
+        .popup-body {
+            padding: 12px 15px 15px 15px;
+            max-height: 250px;
+            overflow-y: auto;
         }
 
         .popup-event {
@@ -47,6 +86,37 @@
             font-size: 12px;
             color: #7f8c8d;
         }
+        
+        .popup-desc {
+            line-height: 1.5;
+            color: #34495e;
+            margin: 0 0 10px 0;
+        }
+        
+        .popup-desc:last-child { margin-bottom: 0; }
+
+        .popup-quote {
+            font-style: italic;
+            color: #2c3e50;
+            background: #f4f1ec;
+            padding: 8px 12px;
+            border-radius: 5px;
+            border-left: 3px solid #d35400;
+            margin: 10px 0;
+            font-size: 13px;
+        }
+
+        /* Стиль підписів країн */
+        .country-label {
+            font-size: 14px;
+            font-weight: bold;
+            color: #aeb6bf;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            white-space: nowrap;
+            pointer-events: none;
+            text-shadow: 1px 1px 2px #fff, -1px -1px 2px #fff;
+        }
 
         .marker-content {
             color: #fff;
@@ -62,39 +132,25 @@
             position: relative;
         }
 
-        .marker-wrapper.active .marker-content {
-            transform: scale(1.3);
-        }
-
-        /* FIX: hover через клас, а не transform напряму */
-        .marker-wrapper.hover .marker-content {
-            transform: scale(1.2);
-        }
+        .marker-wrapper.active .marker-content { transform: scale(1.3); }
+        .marker-wrapper.hover .marker-content { transform: scale(1.2); }
 
         .marker-number {
-            position: absolute;
-            top: -10px;
-            right: -10px;
-            background: #e67e22;
-            color: white;
-            font-size: 10px;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: 2px solid white;
-            font-weight: bold;
+            position: absolute; top: -10px; right: -10px; background: #e67e22;
+            color: white; font-size: 10px; width: 20px; height: 20px;
+            border-radius: 50%; display: flex; justify-content: center;
+            align-items: center; border: 2px solid white; font-weight: bold;
         }
 
         .legend {
-            background: white;
-            padding: 10px;
-            border-radius: 10px;
-            font-size: 13px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            background: white; padding: 10px; border-radius: 10px;
+            font-size: 13px; box-shadow: 0 2px 6px rgba(0,0,0,0.2);
         }
+
+        /* Стиль скроллбару для довгого тексту */
+        .popup-body::-webkit-scrollbar { width: 6px; }
+        .popup-body::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .popup-body::-webkit-scrollbar-thumb { background: #bdc3c7; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -107,34 +163,88 @@
 <script>
     const map = L.map('map', { 
         minZoom: 4, 
-        maxZoom: 10, // ПОВЕРНУТО ЯК БУЛО
+        maxZoom: 10,
         zoomControl: true 
     }).setView([48.0, 22.0], 5);
 
-    // Карта (твоя логіка, без бага з pane)
+    // Використовуємо ТІЛЬКИ шар без підписів (light_nolabels)
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png').addTo(map);
 
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
-        opacity: 0.8
-    }).addTo(map);
+    // Створюємо окремий шар для країн, щоб вони були на задньому плані
+    map.createPane('countriesPane');
+    map.getPane('countriesPane').style.zIndex = 200;
 
-    const locations = [
-        { id: 1, name: "Руський Керестур", coords: [45.5631, 19.4144], icon: "fa-baby", desc: "<b>1886:</b> Місце народження." },
-        { id: 2, name: "Загреб", coords: [45.8150, 15.9819], icon: "fa-book", desc: "<b>1906:</b> Початок навчання." },
-        { id: 3, name: "Рим", coords: [41.9028, 12.4964], icon: "fa-columns", desc: "<b>1907–1911:</b> Навчання." },
-        { id: 4, name: "Фрібург", coords: [46.8065, 7.1620], icon: "fa-graduation-cap", desc: "<b>1913:</b> Дисертація." },
-        { id: 5, name: "Перемишль", coords: [49.7833, 22.7667], icon: "fa-church", desc: "<b>1910–1918:</b> Робота." },
-        { id: "6-8", name: "Львів", coords: [49.8397, 24.0297], icon: "fa-landmark", 
-          isHub: true,
-          events: [
-              { date: "1920–1944", title: "Розквіт", text: "Професор." },
-              { date: "1948", title: "Загибель", text: "Вбивство." }
-          ]
-        },
-        { id: 7, name: "Москва", coords: [55.7558, 37.6173], icon: "fa-file-signature", desc: "<b>1945:</b> Переговори." }
+    // Додаємо власні написи країн
+    const countries = [
+        { name: "Україна", coords: [49.0, 31.0] },
+        { name: "Польща", coords: [52.0, 19.3] },
+        { name: "Італія", coords: [42.5, 12.5] },
+        { name: "Швейцарія", coords: [46.8, 8.2] },
+        { name: "Сербія", coords: [44.0, 21.0] },
+        { name: "Хорватія", coords: [45.1, 15.5] },
+        { name: "Росія", coords: [55.0, 38.0] }
     ];
 
-    const pathOrder = [0, 1, 2, 3, 4, 5, 6, 5];
+    countries.forEach(c => {
+        L.marker(c.coords, {
+            icon: L.divIcon({ className: 'country-label', html: c.name }),
+            interactive: false,
+            pane: 'countriesPane' // Вказуємо, що країни мають лежати на задньому плані
+        }).addTo(map);
+    });
+
+    const locations = [
+        { 
+            id: 1, name: "Руський Керестур", coords: [45.5631, 19.4144], icon: "fa-baby", image: "1.jpg", 
+            imgCaption: "Отець Гавриїл Костельник та його дружина Елеонора. Руський Керестур, 1913 рік", 
+            desc: "<p class='popup-desc'>Гавриїл Костельник народився 15 червня 1886 року в регіоні Бачка у селі Руський Керестур в родині середнього достатку. Мати – Анна (дівоче прізвище Макай) Батько Федір був гарним господарем та з 1895 по 1919 рік виконував обов’язки члена управи. У Гавриїла Костельника було двоє братів - старший Михайло та молодший Ян – а також три сестри.</p><p class='popup-desc'>Саме в Руському Керестурі минуло дитинство майбутнього священника. Там же він закінчив 6 класів початкової школи. Рідний край мав велике значення для Костельника.</p><div class='popup-quote'>«Бачко, моя Бачко!<br>У тим швеце ширим<br>Я за тобу тужим,<br>Нїґде ше не змирим» (1922 р.)</div>" 
+        },
+        { 
+            id: 2, name: "Вінковці", coords: [45.2883, 18.8034], icon: "fa-school", image: "2.jpg", 
+            imgCaption: "Місто Вінковці", 
+            desc: "<p class='popup-desc'>Перші два класи гімназії Гавриїл Костельник закінчив у місті Вінковці в 1898-1900 роках. Закінчив він їх з чималим успіхом. Вінковці не відіграли важливу роль у житті Костельника самі по собі, але стали важливою проміжною ланкою у житті священника.</p>" 
+        },
+        { 
+            id: 3, name: "Загреб", coords: [45.8150, 15.9819], icon: "fa-book", image: "3.jpg", 
+            imgCaption: "Гавриїл Костельник у Загребі", 
+            desc: "<p class='popup-desc'>Після двох років навчання у Вінковцях Костельник переходить в малу духовну греко-католицькій семінарію Загреба. Після її закінчення 1906 року стає студентом на Католицькому богословському факультеті Загребського університету і закінчує там І курс. Однак вже 1907 року молодий студент привертає увагу ректора греко-католицької семінарії в Загребі Діонісія Няряді і останній відправляє Костельника на богословські студії у Львів.</p><p class='popup-desc'>Саме в Загребі Костельник здобуває справді грунтовну освіту, заводить знайомства з різними людьми та починає писати перші твори - не тільки русинською, але й також хорватською і латинською мовами. Ставши секретарем літературного гуртка греко-католицької семінарії в Загребі, юнак читає багато літератури та поезії.</p>" 
+        },
+        { 
+            id: 4, name: "Рим", coords: [41.9028, 12.4964], icon: "fa-columns", image: "4.jpg", 
+            imgCaption: "Рим", 
+            desc: "<p class='popup-desc'><b>1907–1911:</b> Навчання в Папській колегії «Пропаганда Фіде». Здобув вищу католицьку освіту, познайомившись із тогочасними європейськими інтелектуальними течіями.</p>" 
+        },
+        { 
+            id: 5, name: "Фрібур", coords: [46.8065, 7.1620], icon: "fa-graduation-cap", image: "5.jpg", 
+            imgCaption: "Гавриїл Костельник у Фрібурзі в 1912 році", 
+            desc: "<p class='popup-desc'>З 1911 по 1913 рік Костельник працює над докторатом швейцарському університеті міста Фрібур. 1913 року Костельник успішно захищає докторат з філософії, написавши працю «De Principiis Cognitionis Fundamentalibus» (Про основні принципи розумового пізнання).</p>" 
+        },
+        { 
+            id: 6, name: "Перемишль", coords: [49.7833, 22.7667], icon: "fa-church", image: "6.jpg", 
+            imgCaption: "Гавриїл Костельник з родиною Зарицьких. Перемишль 1913 року", 
+            desc: "<p class='popup-desc'>Дружина Костельника, Елеонора Амалія Єлизавета Зарицька народилася у родині професора української гімназії Северина Зарицького. Костельник одружився з нею в 1913 році. Костельник любив та цінував свою дружину. В їх родині народилося 5 дітей - доньки Святослава та Христина і сини Богдан, Іреній та Зиновій. На жаль, Святослава, яка була першою дитиною в родині померла в шестирічному віці.</p>" 
+        },
+        { 
+            id: 7, name: "Жовква", coords: [50.0556, 23.9733], icon: "fa-scroll", image: "7.jpg", 
+            imgCaption: "Перша поетична збірка Костельника, написана бачвансько-руською говіркою", 
+            desc: "<p class='popup-desc'>Письменником Костельник став, ще навчаючися у 6 класі гімназії Загреба. 1904 року в Жовкві у друкарні василіян виходить друком перша книга Костельника. Це невеличка поетична збірка, видана за кошти самого автора. Вона не набула великої популярності, але привернула увагу українських інтелектуальних кіл. Зокрема, позитивну рецензію написав український етнограф Володимир Гнатюк.</p>" 
+        },
+        { 
+            id: "8", name: "Львів", coords: [49.8397, 24.0297], icon: "fa-landmark", image: "8.jpg", 
+            imgCaption: "Львів", isHub: true,
+            events: [
+                { date: "1920–1944", title: "Період розквіту", text: "Професор Богословської академії, видатний проповідник у Соборі св. Юра, редактор журналу «Нива»." },
+                { date: "1948", title: "Трагічна загибель", text: "Убитий біля Преображенської церкви за досі нез'ясованих обставин після повернення з фатального відрядження." }
+            ]
+        },
+        { 
+            id: 9, name: "Москва", coords: [55.7558, 37.6173], icon: "fa-file-signature", image: "9.jpg", 
+            imgCaption: "Москва", 
+            desc: "<p class='popup-desc'><b>1945–1946:</b> Участь у складних переговорах щодо подальшої долі УГКЦ під тиском радянської влади, підготовка до псевдособору 1946 року.</p>" 
+        }
+    ];
+
+    const pathOrder = [0, 1, 2, 3, 4, 5, 6, 7, 8, 7];
 
     function getBezierPoints(start, end, bend = 0.25) {
         const pts = [];
@@ -142,19 +252,20 @@
         const midLng = (start[1] + end[1]) / 2 - (end[0] - start[0]) * bend;
         const cp = [midLat, midLng];
 
-        // оптимізовано
         for (let t = 0; t <= 1; t += 0.05) {
             const lat = (1 - t) * (1 - t) * start[0] + 2 * (1 - t) * t * cp[0] + t * t * end[0];
             const lng = (1 - t) * (1 - t) * start[1] + 2 * (1 - t) * t * cp[1] + t * t * end[1];
             pts.push([lat, lng]);
         }
+        // ПРИМУСОВЕ додавання останньої точки, щоб стрілка 100% доходила до цілі
+        pts.push([end[0], end[1]]);
         return pts;
     }
 
     for (let i = 0; i < pathOrder.length - 1; i++) {
         const start = locations[pathOrder[i]].coords;
         const end = locations[pathOrder[i+1]].coords;
-        const bend = (i === 6) ? -0.35 : 0.25;
+        const bend = (i === 8) ? -0.35 : 0.25;
 
         const curvePoints = getBezierPoints(start, end, bend);
         const line = L.polyline(curvePoints, { color: '#2c3e50', weight: 3, opacity: 0.5 }).addTo(map);
@@ -190,26 +301,49 @@
 
         const marker = L.marker(loc.coords, { icon: customIcon }).addTo(map);
 
-        let content = `<div class="custom-popup"><h3>${loc.name}</h3>`;
+        let content = `
+            <div class="custom-popup">
+                <div class="popup-header">
+                    <h3>${loc.name}</h3>
+                </div>
+                <div class="popup-photo-container">
+                    <img src="${loc.image}" class="popup-photo" alt="${loc.name}">
+                    <p class="popup-photo-caption">${loc.imgCaption}</p>
+                </div>
+                <div class="popup-body">`;
+            
         if (loc.isHub) {
             loc.events.forEach(e => {
                 content += `<div class="popup-event"><span>${e.date}</span><b>${e.title}</b>${e.text}</div>`;
             });
         } else {
-            content += `<p>${loc.desc}</p>`;
+            content += `${loc.desc}`;
         }
-        content += `</div>`;
+        content += `</div></div>`;
 
-        marker.bindPopup(content);
+        // Вимикаємо стандартне автозміщення
+        marker.bindPopup(content, { autoPan: false });
 
         marker.on('click', () => {
             if (activeMarker) activeMarker.classList.remove('active');
             activeMarker = marker.getElement();
             activeMarker.classList.add('active');
-            map.flyTo(loc.coords, 8, { duration: 1.5 });
+            
+            const targetZoom = 8;
+            
+            // Перетворюємо координати в пікселі екрану
+            const projectedCenter = map.project(loc.coords, targetZoom);
+            
+            // Збільшено відступ до 260 пікселів, щоб вікно гарантовано вмістилося
+            projectedCenter.y -= 260; 
+            
+            // Перетворюємо пікселі назад у координати
+            const newCenter = map.unproject(projectedCenter, targetZoom);
+            
+            // Летимо до нової, виправленої точки
+            map.flyTo(newCenter, targetZoom, { duration: 1.5 });
         });
 
-        // FIXED hover
         marker.on('mouseover', () => {
             marker.getElement().classList.add('hover');
         });
@@ -219,15 +353,12 @@
         });
     });
 
-    // ПОВЕРНЕНА твоя логіка
     map.on('popupclose', () => {
         if (activeMarker) activeMarker.classList.remove('active');
         map.flyTo([48.0, 22.0], 5, { duration: 1.5 });
     });
 
-    // легенда
     const legend = L.control({ position: "bottomright" });
-
     legend.onAdd = function () {
         const div = L.DomUtil.create("div", "legend");
         div.innerHTML = `
@@ -239,7 +370,6 @@
         `;
         return div;
     };
-
     legend.addTo(map);
 
 </script>
