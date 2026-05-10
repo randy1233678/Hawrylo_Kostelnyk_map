@@ -26,6 +26,63 @@
             font-size: 14px;
         }
 
+        /* --- НОВЕ: ПЕРЕВИЗНАЧЕННЯ ТІЛЬКИ ДЛЯ ЛЬВОВА --- */
+        .leaflet-popup.lviv-popup-override .leaflet-popup-content {
+            max-width: 550px !important;
+            width: 550px !important;
+        }
+
+        .lviv-popup-container {
+            display: flex;
+            width: 100%;
+            background: #fff;
+        }
+
+        .lviv-left {
+            width: 220px;
+            flex-shrink: 0;
+            background: #f9f9f9;
+            border-right: 1px solid #eee;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .lviv-right {
+            flex-grow: 1;
+            padding: 15px;
+        }
+
+        .lviv-right::after {
+            content: "";
+            display: block;
+            clear: both;
+        }
+        .lviv-nav-btns {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #fff;
+            border-top: 1px solid #eee;
+            margin-top: auto;
+        }
+
+        .lviv-nav-btn {
+            background: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 12px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .lviv-nav-btn:disabled {
+            background: #bdc3c7;
+            cursor: default;
+        }
+        /* ---------------------------------------------- */
+
         .popup-header {
             padding: 15px 15px 5px 15px;
         }
@@ -37,7 +94,6 @@
             padding-bottom: 5px;
         }
 
-        /* Блок для фотографій (540x450) */
         .popup-photo-container {
             width: 100%;
             display: flex;
@@ -106,7 +162,6 @@
             font-size: 13px;
         }
 
-        /* Стиль підписів країн */
         .country-label {
             font-size: 14px;
             font-weight: bold;
@@ -136,18 +191,21 @@
         .marker-wrapper.hover .marker-content { transform: scale(1.2); }
 
         .marker-number {
-            position: absolute; top: -10px; right: -10px; background: #e67e22;
+            display: none;
+            /*position: absolute; top: -10px; right: -10px; background: #e67e22;
             color: white; font-size: 10px; width: 20px; height: 20px;
             border-radius: 50%; display: flex; justify-content: center;
-            align-items: center; border: 2px solid white; font-weight: bold;
+            align-items: center; border: 2px solid white; font-weight: bold;*/
         }
 
-        .legend {
-            background: white; padding: 10px; border-radius: 10px;
-            font-size: 13px; box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        /* --- НОВЕ: ПЛАШКА АВТОРІВ ЗАМІСТЬ ЛЕГЕНДИ --- */
+        .authors-box {
+            background: white; padding: 15px; border-radius: 10px;
+            font-size: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            border-left: 4px solid #2c3e50; width: 280px;
+            line-height: 1.5;
         }
 
-        /* Стиль скроллбару для довгого тексту */
         .popup-body::-webkit-scrollbar { width: 6px; }
         .popup-body::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
         .popup-body::-webkit-scrollbar-thumb { background: #bdc3c7; border-radius: 4px; }
@@ -167,14 +225,11 @@
         zoomControl: true 
     }).setView([48.0, 22.0], 5);
 
-    // Використовуємо ТІЛЬКИ шар без підписів (light_nolabels)
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png').addTo(map);
 
-    // Створюємо окремий шар для країн, щоб вони були на задньому плані
     map.createPane('countriesPane');
     map.getPane('countriesPane').style.zIndex = 200;
 
-    // Додаємо власні написи країн
     const countries = [
         { name: "Україна", coords: [49.0, 31.0] },
         { name: "Польща", coords: [52.0, 19.3] },
@@ -189,7 +244,7 @@
         L.marker(c.coords, {
             icon: L.divIcon({ className: 'country-label', html: c.name }),
             interactive: false,
-            pane: 'countriesPane' // Вказуємо, що країни мають лежати на задньому плані
+            pane: 'countriesPane'
         }).addTo(map);
     });
 
@@ -215,36 +270,41 @@
             desc: "<p class='popup-desc'><b>1907–1911:</b> Навчання в Папській колегії «Пропаганда Фіде». Здобув вищу католицьку освіту, познайомившись із тогочасними європейськими інтелектуальними течіями.</p>" 
         },
         { 
-            id: 5, name: "Фрібур", coords: [46.8065, 7.1620], icon: "fa-graduation-cap", image: "5.jpg", 
+            id: 5, name: "Фрібург", coords: [46.8065, 7.1620], icon: "fa-graduation-cap", image: "5.jpg", 
             imgCaption: "Гавриїл Костельник у Фрібурзі в 1912 році", 
-            desc: "<p class='popup-desc'>З 1911 по 1913 рік Костельник працює над докторатом швейцарському університеті міста Фрібур. 1913 року Костельник успішно захищає докторат з філософії, написавши працю «De Principiis Cognitionis Fundamentalibus» (Про основні принципи розумового пізнання).</p>" 
+            desc: "<p class='popup-desc'>З 1911 по 1913 рік Костельник працює над докторатом швейцарському університеті міста Фрібург. 1913 року Костельник успішно захищає докторат з філософії, написавши працю «De Principiis Cognitionis Fundamentalibus» (Про основні принципи розумового пізнання).</p>" 
         },
         { 
-            id: 6, name: "Перемишль", coords: [49.7833, 22.7667], icon: "fa-church", image: "6.jpg", 
+            id: 6, name: "Перемишль", coords: [49.7833, 22.7667], icon: "fa-church", image: "6.jpg",
+            secondary: true, 
             imgCaption: "Гавриїл Костельник з родиною Зарицьких. Перемишль 1913 року", 
             desc: "<p class='popup-desc'>Дружина Костельника, Елеонора Амалія Єлизавета Зарицька народилася у родині професора української гімназії Северина Зарицького. Костельник одружився з нею в 1913 році. Костельник любив та цінував свою дружину. В їх родині народилося 5 дітей - доньки Святослава та Христина і сини Богдан, Іреній та Зиновій. На жаль, Святослава, яка була першою дитиною в родині померла в шестирічному віці.</p>" 
         },
         { 
-            id: 7, name: "Жовква", coords: [50.0556, 23.9733], icon: "fa-scroll", image: "7.jpg", 
+            id: 7, name: "Жовква", coords: [50.0556, 23.9733], icon: "fa-scroll", image: "7.jpg",
+            secondary: true, 
             imgCaption: "Перша поетична збірка Костельника, написана бачвансько-руською говіркою", 
             desc: "<p class='popup-desc'>Письменником Костельник став, ще навчаючися у 6 класі гімназії Загреба. 1904 року в Жовкві у друкарні василіян виходить друком перша книга Костельника. Це невеличка поетична збірка, видана за кошти самого автора. Вона не набула великої популярності, але привернула увагу українських інтелектуальних кіл. Зокрема, позитивну рецензію написав український етнограф Володимир Гнатюк.</p>" 
         },
         { 
-            id: "8", name: "Львів", coords: [49.8397, 24.0297], icon: "fa-landmark", image: "8.jpg", 
-            imgCaption: "Львів", isHub: true,
-            events: [
-                { date: "1920–1944", title: "Період розквіту", text: "Професор Богословської академії, видатний проповідник у Соборі св. Юра, редактор журналу «Нива»." },
-                { date: "1948", title: "Трагічна загибель", text: "Убитий біля Преображенської церкви за досі нез'ясованих обставин після повернення з фатального відрядження." }
-            ]
+            id: "8", name: "Львів", coords: [49.8397, 24.0297], icon: "fa-landmark", isHub: true
         },
         { 
             id: 9, name: "Москва", coords: [55.7558, 37.6173], icon: "fa-file-signature", image: "9.jpg", 
             imgCaption: "Москва", 
             desc: "<p class='popup-desc'><b>1945–1946:</b> Участь у складних переговорах щодо подальшої долі УГКЦ під тиском радянської влади, підготовка до псевдособору 1946 року.</p>" 
+        },
+        { 
+            id: 10, name: "Сремські Карловці", coords: [45.2025, 19.9342], icon: "fa-cross", image: "11.jpg",
+            secondary: true, 
+            imgCaption: "Обкладинка Граматики бачваньско-рускей бешеди.", 
+            desc: "<p class='popup-desc'>Попри переїзд до Львова, Костельник не поривав зв’язків зі своїм рідним краєм. Костельник цікавився рідною говіркою ще під час навчання в семінарії. А в 1919 році після розпаду Австро-Угорщини регіон Бачка став частиною Югославії. Політика мадяризації припинилася. 2 липня 1919 році бачванськими русаними було засноване Руске Народне Просвитне Дружство (далі – РНПД). Костельник активно підтримував звязки з членами цього товариства. Тож коли до Костельника звернулися священник Дюра Биндач і перший очільник РНПД Михал Мудри з проханням написати граматику бачвано-русинської говірки – він з радістю відгукнувся на їх прохання.  Граматика була написана і існувала в рукописі вже в 1921 році. Проте її видання затягнулося. Зрештою, в 1923 році РНПД таки видало Граматику бачваньско-рускей бешеди в Сремських Карловцях, у місцевій монастирській друкарні..</p>" 
         }
     ];
 
-    const pathOrder = [0, 1, 2, 3, 4, 5, 6, 7, 8, 7];
+    // --- НОВИЙ ПОРЯДОК МАРШРУТУ ---
+    // Руський Керестур(0) – Винковці(1) – Загреб(2) – Львів(7) – Фрібург(4) – Львів(7) – Рим(3) – Львів(7) – Москва(8) – Львів(7)
+    const pathOrder = [0, 1, 2, 7, 4, 7, 3, 7, 8, 7];
 
     function getBezierPoints(start, end, bend = 0.25) {
         const pts = [];
@@ -257,7 +317,6 @@
             const lng = (1 - t) * (1 - t) * start[1] + 2 * (1 - t) * t * cp[1] + t * t * end[1];
             pts.push([lat, lng]);
         }
-        // ПРИМУСОВЕ додавання останньої точки, щоб стрілка 100% доходила до цілі
         pts.push([end[0], end[1]]);
         return pts;
     }
@@ -265,9 +324,10 @@
     for (let i = 0; i < pathOrder.length - 1; i++) {
         const start = locations[pathOrder[i]].coords;
         const end = locations[pathOrder[i+1]].coords;
-        const bend = (i === 8) ? -0.35 : 0.25;
-
-        const curvePoints = getBezierPoints(start, end, bend);
+        
+        // Використовуємо сталий вигин 0.25. 
+        // Математика побудована так, що лінія "туди" і "назад" будуть автоматично вигинатися в різні боки.
+        const curvePoints = getBezierPoints(start, end, 0.25);
         const line = L.polyline(curvePoints, { color: '#2c3e50', weight: 3, opacity: 0.5 }).addTo(map);
 
         L.polylineDecorator(line, {
@@ -288,41 +348,108 @@
         return '#2c3e50';
     };
 
+    // --- ДАНІ ТА ЛОГІКА ДЛЯ ЛЬВОВА ---
+    const lvivSlides = [
+        { 
+            date: "1920–1944", 
+            title: "Період розквіту", 
+            text: "Професор Богословської академії, видатний проповідник у Соборі св. Юра, редактор журналу «Нива» текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст.",
+            img: "8.jpg"
+        },
+        { 
+            date: "1948", 
+            title: "Трагічна загибель", 
+            text: "Убитий біля Преображенської церкви за досі нез'ясованих обставин після повернення з фатального відрядження.",
+            img: "8.jpg" // Заміни на потрібну назву файлу, якщо є (наприклад, 10.jpg)
+        }
+    ];
+    let currentLvivSlide = 0;
+    window.lvivMarkerRef = null;
+
+    function getLvivHTML() {
+        const s = lvivSlides[currentLvivSlide];
+        return `
+            <div class="custom-popup">
+                <div class="popup-header" style="border-bottom: 1px solid #eee; margin-bottom: 0;">
+                    <h3 style="margin: 0; padding-bottom: 5px; border: none;">Львів</h3>
+                </div>
+                <div class="lviv-popup-container">
+                    <div class="lviv-left">
+                        <img src="${s.img}" style="width: 200px; height: auto; float: left; margin: 0 15px 10px 0; object-fit: cover;" alt="Львів">
+                        <div class="lviv-nav-btns">
+    <button class="lviv-nav-btn" onclick="event.stopPropagation(); changeLvivSlide(-1)" ${currentLvivSlide === 0 ? 'disabled' : ''}>
+        <i class="fa-solid fa-chevron-left"></i>
+    </button>
+
+    <span style="font-size: 13px; font-weight: bold; color: #2c3e50;">
+        ${currentLvivSlide + 1} / ${lvivSlides.length}
+    </span>
+
+    <button class="lviv-nav-btn" onclick="event.stopPropagation(); changeLvivSlide(1)" ${currentLvivSlide === lvivSlides.length - 1 ? 'disabled' : ''}>
+        <i class="fa-solid fa-chevron-right"></i>
+    </button>
+</div>
+                    </div>
+                    <div class="lviv-right">
+                        <div class="popup-event" style="margin-bottom: 0; border-left: 3px solid #c0392b;">
+                            <span>${s.date}</span>
+                            <b style="color: #c0392b; font-size: 15px; margin-top: 5px;">${s.title}</b>
+                            <p class="popup-desc" style="margin-top: 10px;">${s.text}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    window.changeLvivSlide = function(dir) {
+        currentLvivSlide += dir;
+        if (window.lvivMarkerRef) {
+            window.lvivMarkerRef.getPopup().setContent(getLvivHTML());
+        }
+    };
+
     let activeMarker = null;
 
     locations.forEach((loc, idx) => {
-        const customIcon = L.divIcon({
-            className: 'marker-wrapper',
-            html: `<div class="marker-content" style="background-color:${getColor(loc)}">
-                   <i class="fa-solid ${loc.icon}"></i>
-                   <div class="marker-number">${idx + 1}</div></div>`,
-            iconSize: [36, 36], iconAnchor: [18, 18]
-        });
+        const isSecondary = loc.secondary;
+
+const customIcon = L.divIcon({
+    className: 'marker-wrapper',
+    html: `<div class="marker-content" style="
+                background-color:${isSecondary ? '#95a5a6' : getColor(loc)};
+                width:${isSecondary ? '26px' : '36px'};
+                height:${isSecondary ? '26px' : '36px'};
+            ">
+           <i class="fa-solid ${loc.icon}" style="font-size:${isSecondary ? '12px' : '16px'}"></i>
+           ${!isSecondary ? `<div class="marker-number">${idx + 1}</div>` : ''}
+           </div>`,
+    iconSize: isSecondary ? [26, 26] : [36, 36],
+    iconAnchor: isSecondary ? [13, 13] : [18, 18]
+});
 
         const marker = L.marker(loc.coords, { icon: customIcon }).addTo(map);
 
-        let content = `
-            <div class="custom-popup">
-                <div class="popup-header">
-                    <h3>${loc.name}</h3>
-                </div>
-                <div class="popup-photo-container">
-                    <img src="${loc.image}" class="popup-photo" alt="${loc.name}">
-                    <p class="popup-photo-caption">${loc.imgCaption}</p>
-                </div>
-                <div class="popup-body">`;
-            
         if (loc.isHub) {
-            loc.events.forEach(e => {
-                content += `<div class="popup-event"><span>${e.date}</span><b>${e.title}</b>${e.text}</div>`;
-            });
+            window.lvivMarkerRef = marker;
+            // Додаємо клас lviv-popup-override для розширення вікна
+            marker.bindPopup(getLvivHTML(), { autoPan: false, className: 'lviv-popup-override' });
         } else {
-            content += `${loc.desc}`;
+            let content = `
+                <div class="custom-popup">
+                    <div class="popup-header">
+                        <h3>${loc.name}</h3>
+                    </div>
+                    <div class="popup-photo-container">
+                        <img src="${loc.image}" class="popup-photo" alt="${loc.name}">
+                        <p class="popup-photo-caption">${loc.imgCaption}</p>
+                    </div>
+                    <div class="popup-body">
+                        ${loc.desc}
+                    </div>
+                </div>`;
+            marker.bindPopup(content, { autoPan: false });
         }
-        content += `</div></div>`;
-
-        // Вимикаємо стандартне автозміщення
-        marker.bindPopup(content, { autoPan: false });
 
         marker.on('click', () => {
             if (activeMarker) activeMarker.classList.remove('active');
@@ -330,27 +457,15 @@
             activeMarker.classList.add('active');
             
             const targetZoom = 8;
-            
-            // Перетворюємо координати в пікселі екрану
             const projectedCenter = map.project(loc.coords, targetZoom);
-            
-            // Збільшено відступ до 260 пікселів, щоб вікно гарантовано вмістилося
             projectedCenter.y -= 260; 
-            
-            // Перетворюємо пікселі назад у координати
             const newCenter = map.unproject(projectedCenter, targetZoom);
             
-            // Летимо до нової, виправленої точки
             map.flyTo(newCenter, targetZoom, { duration: 1.5 });
         });
 
-        marker.on('mouseover', () => {
-            marker.getElement().classList.add('hover');
-        });
-
-        marker.on('mouseout', () => {
-            marker.getElement().classList.remove('hover');
-        });
+        marker.on('mouseover', () => marker.getElement().classList.add('hover'));
+        marker.on('mouseout', () => marker.getElement().classList.remove('hover'));
     });
 
     map.on('popupclose', () => {
@@ -358,19 +473,18 @@
         map.flyTo([48.0, 22.0], 5, { duration: 1.5 });
     });
 
-    const legend = L.control({ position: "bottomright" });
-    legend.onAdd = function () {
-        const div = L.DomUtil.create("div", "legend");
+    // --- НОВА ПЛАШКА ЗАМІСТЬ ЛЕГЕНДИ ---
+    const authorInfo = L.control({ position: "bottomright" });
+    authorInfo.onAdd = function () {
+        const div = L.DomUtil.create("div", "authors-box");
         div.innerHTML = `
-            <b>Легенда</b><br>
-            👶 Народження<br>
-            📚 Навчання<br>
-            ⛪ Служіння<br>
-            ⚰️ Події
-        `;
+    <b style="color: #2c3e50;">Автори:</b><br>
+    <span style="color: #7f8c8d;">Розробник: Стаценко Антон</span><br>
+    <span style="color: #7f8c8d;">Текст та дослідження: Стаценко Данило</span>
+`;
         return div;
     };
-    legend.addTo(map);
+    authorInfo.addTo(map);
 
 </script>
 </body>
