@@ -12,6 +12,25 @@
         body { margin: 0; padding: 0; font-family: 'Helvetica Neue', Arial, sans-serif; background: #f0ede5; }
         #map { width: 100vw; height: 100vh; }
         
+        /* --- ГОЛОВНИЙ ЗАГОЛОВОК --- */
+        #top-title {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background: white;
+            padding: 12px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            border-bottom: 5px solid #2c3e50;
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            text-align: center;
+            white-space: nowrap;
+        }
+
         .custom-popup .leaflet-popup-content-wrapper {
             background: #fff;
             border-radius: 12px;
@@ -26,7 +45,6 @@
             font-size: 14px;
         }
 
-        /* --- НОВЕ: ПЕРЕВИЗНАЧЕННЯ ТІЛЬКИ ДЛЯ ЛЬВОВА --- */
         .leaflet-popup.lviv-popup-override .leaflet-popup-content {
             max-width: 550px !important;
             width: 550px !important;
@@ -34,37 +52,43 @@
 
         .lviv-popup-container {
             display: flex;
+            flex-direction: column;
             width: 100%;
             background: #fff;
         }
 
-        .lviv-left {
-            width: 220px;
-            flex-shrink: 0;
-            background: #f9f9f9;
-            border-right: 1px solid #eee;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .lviv-right {
-            flex-grow: 1;
+        .lviv-body {
             padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
         }
 
-        .lviv-right::after {
-            content: "";
-            display: block;
-            clear: both;
+        .lviv-image-wrapper {
+            float: left;
+            width: 220px;
+            margin: 0 15px 10px 0;
+            background: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            padding-bottom: 8px;
         }
+
+        .lviv-image-wrapper img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 4px 4px 0 0;
+        }
+
         .lviv-nav-btns {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px;
-            background: #fff;
+            padding: 10px 15px;
+            background: #f9f9f9;
             border-top: 1px solid #eee;
-            margin-top: auto;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .lviv-nav-btn {
@@ -72,16 +96,14 @@
             color: white;
             border: none;
             border-radius: 4px;
-            padding: 5px 12px;
+            padding: 6px 15px;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 13px;
+            transition: background 0.2s;
         }
 
-        .lviv-nav-btn:disabled {
-            background: #bdc3c7;
-            cursor: default;
-        }
-        /* ---------------------------------------------- */
+        .lviv-nav-btn:hover:not(:disabled) { background: #34495e; }
+        .lviv-nav-btn:disabled { background: #bdc3c7; cursor: default; }
 
         .popup-header {
             padding: 15px 15px 5px 15px;
@@ -111,7 +133,8 @@
             display: block;
         }
 
-        .popup-photo-caption {
+        /* Стилі для посилань-підписів */
+        .popup-photo-caption, .lviv-image-caption {
             font-size: 11px;
             color: #7f8c8d;
             font-style: italic;
@@ -119,6 +142,17 @@
             padding: 8px 10px 0;
             margin: 0;
         }
+        
+        .source-link,
+.source-link:visited,
+.source-link:active {
+    color: #444 !important;
+    text-decoration: underline;
+}
+
+.source-link:hover {
+    color: #000 !important;
+}
 
         .popup-body {
             padding: 12px 15px 15px 15px;
@@ -189,39 +223,201 @@
 
         .marker-wrapper.active .marker-content { transform: scale(1.3); }
         .marker-wrapper.hover .marker-content { transform: scale(1.2); }
+        .marker-number { display: none; }
 
-        .marker-number {
-            display: none;
-            /*position: absolute; top: -10px; right: -10px; background: #e67e22;
-            color: white; font-size: 10px; width: 20px; height: 20px;
-            border-radius: 50%; display: flex; justify-content: center;
-            align-items: center; border: 2px solid white; font-weight: bold;*/
+        /* --- АВТОРИ З МОЖЛИВІСТЮ ЗГОРТАННЯ --- */
+        .authors-container {
+            display: flex;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            overflow: hidden;
+            transition: max-width 0.3s ease;
+            max-width: 320px; /* Повна ширина */
         }
 
-        /* --- НОВЕ: ПЛАШКА АВТОРІВ ЗАМІСТЬ ЛЕГЕНДИ --- */
-        .authors-box {
-            background: white; padding: 15px; border-radius: 10px;
-            font-size: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-            border-left: 4px solid #2c3e50; width: 280px;
+        .authors-toggle {
+            background: #2c3e50;
+            color: white;
+            width: 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .authors-toggle i {
+            transition: transform 0.3s ease;
+        }
+
+        .authors-content {
+            padding: 15px;
+            font-size: 14px;
             line-height: 1.5;
+            white-space: nowrap;
+            transition: opacity 0.2s ease, padding 0.3s ease;
         }
 
-        .popup-body::-webkit-scrollbar { width: 6px; }
-        .popup-body::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
-        .popup-body::-webkit-scrollbar-thumb { background: #bdc3c7; border-radius: 4px; }
+        /* Клас згорнутого стану */
+        .authors-container.collapsed {
+            max-width: 25px; /* Залишається лише темна смужка */
+        }
+        .authors-container.collapsed .authors-content {
+            padding: 15px 0;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .authors-container.collapsed .authors-toggle i {
+            transform: rotate(180deg);
+        }
+
+        .popup-body::-webkit-scrollbar, .lviv-body::-webkit-scrollbar { width: 6px; }
+        .popup-body::-webkit-scrollbar-track, .lviv-body::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .popup-body::-webkit-scrollbar-thumb, .lviv-body::-webkit-scrollbar-thumb { background: #bdc3c7; border-radius: 4px; }
+
+/* --- КОНТЕЙНЕР ДЖЕРЕЛ --- */
+.sources-container {
+    position: absolute;
+    top: 80px;
+    left: 10px; 
+    height: calc(100vh - 100px); 
+    
+    /* ВСТАНОВІТЬ БАЖАНУ ШИРИНУ ТУТ */
+    width: 350px; 
+    
+    display: flex;
+    z-index: 1000;
+    background: white; 
+    border-radius: 10px; 
+    box-shadow: 2px 0 6px rgba(0,0,0,0.2); 
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Внутрішній блок з самим текстом/списком */
+.sources-content {
+    flex-grow: 1; /* Займає весь вільний простір зліва від кнопки */
+    padding: 15px; /* Ваші внутрішні відступи */
+    overflow-y: auto; /* Щоб контент прокручувався, якщо його багато */
+}
+
+/* Стан "Закрито" */
+.sources-container.closed {
+    /* Ховаємо всю ширину + відступ зліва */
+    transform: translateX(calc(-100% - 10px));
+    box-shadow: none; 
+}
+
+/* --- КНОПКА --- */
+.sources-toggle {
+    width: 25px; 
+    background: #2c3e50;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 0 10px 10px 0;
+    flex-shrink: 0; /* Щоб кнопка не стискалася */
+    transition: transform 0.3s ease, border-radius 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Висуваємо кнопку, коли панель схована */
+.sources-container.closed .sources-toggle {
+    /* 35px = 10px (відступ) + 25px (ширина кнопки) */
+    transform: translateX(35px); 
+    border-radius: 10px; 
+    box-shadow: 2px 0 6px rgba(0,0,0,0.2);
+}
+
+.sources-toggle i {
+    transition: transform 0.3s ease;
+}
+
+.sources-container.closed .sources-toggle i {
+    transform: rotate(180deg);
+}
+
+        /* --- АДАПТИВ ДЛЯ МОБІЛЬНИХ ПРИСТРОЇВ --- */
+        @media (max-width: 768px) {
+            #top-title {
+                width: 85%;
+                font-size: 13px;
+                padding: 10px 15px;
+                white-space: normal;
+                top: 10px;
+            }
+            .leaflet-popup.lviv-popup-override .leaflet-popup-content {
+                width: 90vw !important;
+            }
+            .lviv-image-wrapper {
+                width: 100%;
+                float: none;
+                margin: 0 0 10px 0;
+            }
+            .authors-container {
+                margin-bottom: 15px;
+            }
+            .leaflet-control-container .leaflet-bottom.leaflet-right {
+                bottom: 10px;
+                right: 10px;
+            }
+
+            .sources-container {
+            top: 70px;
+            height: calc(100vh - 90px);
+            }
+            .sources-content {
+            width: calc(85vw - 25px); /* Адаптивна ширина: 85% ширини екрану мінус сама кнопка */
+            padding: 15px;
+            }
+        }
+        
     </style>
 </head>
 <body>
 
+<div id="top-title">Шляхами та перехрестями Гавриїла Костельника. Інтерактивна мапа</div>
 <div id="map"></div>
+
+<div id="sourcesPanel" class="sources-container closed">
+    <div class="sources-content">
+        <h3>Список використаних джерел</h3>
+        <!-- ЗМІНЕНО: додано class="source-link" замість style="..." -->
+        <p><a href="https://zbruc.eu/node/83124" target="_blank" class="source-link">1. Отець Гавриїл Костельник та його дружина Елеонора</a></p>
+        <p><a href="https://hr.wikipedia.org/wiki/Vinkovci" target="_blank" class="source-link">2. Будівля гімназії у місті Вінковці на початку 20 століття</a></p>
+        <p><a href="https://zbruc.eu/node/83124" target="_blank" class="source-link">3. Гавриїл Костельник у Загребі</a></p>
+        <p><a href="https://zbruc.eu/node/79103" target="_blank" class="source-link">4. Посвідчення Костельника як студента Львівського університету</a></p>
+        <p><a href="https://zbruc.eu/node/79103" target="_blank" class="source-link">5. Гавриїл Костельник у Фрібурзі в 1912 році</a></p>
+        <p><a href="https://www.periodpaper.com/" target="_blank" class="source-link">6. Cобор Святого Петра</a></p>
+        <p><a href="https://zbruc.eu/node/79103" target="_blank" class="source-link">7. Гавриїл Костельник з родиною Зарицьких</a></p>
+        <p><a href="https://diasporiana.org.ua/" target="_blank" class="source-link">8. Обкладинка Граматики бачваньско-рускей бешеди</a></p>
+        <p class="source-link">9. Костельник зі студентами та дітьми в Карпатах. <i style="font-size: smaller;">Джерело фото: Тамаш Ю. Гавриїл Костельник медзи доктрину и природу. Нови Сад 1986.</i></p>
+        <p><a href="https://zbruc.eu/node/104244" target="_blank" class="source-link">10. Гавриїл Костельник під час наступних відвідин Москви</a></p>
+        <p><a href="https://uma.lvivcenter.org/uk/photos/2317" target="_blank" class="source-link">11. Отець Гавриїл Костельник та учасники Львівського псевдособору</a></p>
+        
+    </div>
+
+    <div class="sources-toggle" onclick="toggleSources()">
+        <i class="fa-solid fa-chevron-left"></i>
+    </div>
+</div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
 
 <script>
+    // Обмеження карти лише Європою
+    const bounds = [
+        [34.0, -10.0], // Південний Захід
+        [71.0, 45.0]   // Північний Схід
+    ];
+
     const map = L.map('map', { 
         minZoom: 4, 
         maxZoom: 10,
+        maxBounds: bounds,
+        maxBoundsViscosity: 1.0,
         zoomControl: true 
     }).setView([48.0, 22.0], 5);
 
@@ -256,23 +452,23 @@
         },
         { 
             id: 2, name: "Вінковці", coords: [45.2883, 18.8034], icon: "fa-school", image: "2.jpg", 
-            imgCaption: "Місто Вінковці", 
-            desc: "<p class='popup-desc'>Перші два класи гімназії Гавриїл Костельник закінчив у місті Вінковці в 1898-1900 роках. Закінчив він їх з чималим успіхом. Вінковці не відіграли важливу роль у житті Костельника самі по собі, але стали важливою проміжною ланкою у житті священника.</p>" 
+            imgCaption: "Будівля гімназії у місті Вінковці на початку 20 століття", 
+            desc: "<p class='popup-desc'>Перші два класу гімназії Гавриїл Костельник закінчив у місті Вінковці в 1898-1900 роках. Закінчив він їх з чималим успіхом. Вінковці не відіграли важливу роль у житті Костельника самі по собі, але стали важливою проміжною ланкою у житті священника.</p>" 
         },
         { 
             id: 3, name: "Загреб", coords: [45.8150, 15.9819], icon: "fa-book", image: "3.jpg", 
             imgCaption: "Гавриїл Костельник у Загребі", 
-            desc: "<p class='popup-desc'>Після двох років навчання у Вінковцях Костельник переходить в малу духовну греко-католицькій семінарію Загреба. Після її закінчення 1906 року стає студентом на Католицькому богословському факультеті Загребського університету і закінчує там І курс. Однак вже 1907 року молодий студент привертає увагу ректора греко-католицької семінарії в Загребі Діонісія Няряді і останній відправляє Костельника на богословські студії у Львів.</p><p class='popup-desc'>Саме в Загребі Костельник здобуває справді грунтовну освіту, заводить знайомства з різними людьми та починає писати перші твори - не тільки русинською, але й також хорватською і латинською мовами. Ставши секретарем літературного гуртка греко-католицької семінарії в Загребі, юнак читає багато літератури та поезії.</p>" 
+            desc: "<p class='popup-desc'>Після двох років навчання у Вінковцях Костельник переходить в малу духовну греко-католицькій семінарію Загреба. Після її закінчення 1906 року стає студентом на Католицькому богословському факультеті Загребського університету і закінчує там І курс. Однак вже 1907 року молодий студент привертає увагу ректора греко-католицької семінарії в Загребі Діонісія Няряді і останній відправляє Костельника на богословські студії у Львів.</p><p class='popup-desc'>Саме в Загребі Костельник здобуває справді грунтовну освіту, заводить знайомства з різними людьми та починає писати перші твори - не тільки русинською, але й також хорватською і латинською мовами.</p>" 
         },
         { 
             id: 4, name: "Рим", coords: [41.9028, 12.4964], icon: "fa-columns", image: "4.jpg", 
-            imgCaption: "Рим", 
-            desc: "<p class='popup-desc'><b>1907–1911:</b> Навчання в Папській колегії «Пропаганда Фіде». Здобув вищу католицьку освіту, познайомившись із тогочасними європейськими інтелектуальними течіями.</p>" 
+            imgCaption: "Собор Святого Петра 1925 рік", 
+            desc: "<p class='popup-desc'>Влітку 1925 року отець Гавриїл Костельник відвідав Рим у складі греко-католицького паломництва і докладно описав цю мандрівку у циклі статтей для газети «Діло».</p><p class='popup-desc'>«Зі Львова виїхало нас около 50 осіб – майже всі Львовяне. Вісьмох священиків (з о. пралатом Войнаровським «на чолі»), а решта світські.» – писав про подорож Костельник. Їхали паломники до Риму поїздами, з пересадками та кількаденними зупинками у Відні та Венеції.</p><p class='popup-desc'>«Рим! Рим... У душі ворушилось усе, що ми про Рим чули й читали від І. гімназ. кляси; Тарквіній, Катон, Ціперон, Цезар, Нерон, circus maximus, св, Петро і Павло, Ватикан… Десятки століть простягались перед нами наповнені своїми подіями чистими і нечистими – наче те простирало, що його бачив у видінні св. Петро. І з душі підносився голос: «Бери і їдж – чи чисте, чи нечисте!» – так писав про перші враження від Риму Костельник.</p><p class='popup-desc'>В Римі паломники піднялися на пагорб Палатин, оглянули Колізей та Базиліку святого Петра, Ватикан, а також мали коротку аудієнцію з папою Пієм XI.</p>"
         },
         { 
             id: 5, name: "Фрібург", coords: [46.8065, 7.1620], icon: "fa-graduation-cap", image: "5.jpg", 
             imgCaption: "Гавриїл Костельник у Фрібурзі в 1912 році", 
-            desc: "<p class='popup-desc'>З 1911 по 1913 рік Костельник працює над докторатом швейцарському університеті міста Фрібург. 1913 року Костельник успішно захищає докторат з філософії, написавши працю «De Principiis Cognitionis Fundamentalibus» (Про основні принципи розумового пізнання).</p>" 
+            desc: "<p class='popup-desc'>З 1911 по 1913 рік Костельник працює над докторатом швейцарському  університеті міста Фрібург. 1913 року Костельник успішно захищає докторат з філософії, написавши працю «De Principiis Cognitionis Fundamentalibus» (Про основні принципи розумового пізнання).</p>" 
         },
         { 
             id: 6, name: "Перемишль", coords: [49.7833, 22.7667], icon: "fa-church", image: "6.jpg",
@@ -283,27 +479,25 @@
         { 
             id: 7, name: "Жовква", coords: [50.0556, 23.9733], icon: "fa-scroll", image: "7.jpg",
             secondary: true, 
-            imgCaption: "Перша поетична збірка Костельника, написана бачвансько-руською говіркою", 
-            desc: "<p class='popup-desc'>Письменником Костельник став, ще навчаючися у 6 класі гімназії Загреба. 1904 року в Жовкві у друкарні василіян виходить друком перша книга Костельника. Це невеличка поетична збірка, видана за кошти самого автора. Вона не набула великої популярності, але привернула увагу українських інтелектуальних кіл. Зокрема, позитивну рецензію написав український етнограф Володимир Гнатюк.</p>" 
+            imgCaption: "Перша поетична збірка Костельника", 
+            desc: "<p class='popup-desc'>Письменником Костельник став, ще навчаючися у 6 класі гімназії Загреба. 1904 року в Жовкві у друкарні василіян виходить друком перша книга Костельника. Це невеличка поетична збірка, видана за кошти самого автора.</p>" 
         },
         { 
             id: "8", name: "Львів", coords: [49.8397, 24.0297], icon: "fa-landmark", isHub: true
         },
         { 
-            id: 9, name: "Москва", coords: [55.7558, 37.6173], icon: "fa-file-signature", image: "9.jpg", 
-            imgCaption: "Москва", 
-            desc: "<p class='popup-desc'><b>1945–1946:</b> Участь у складних переговорах щодо подальшої долі УГКЦ під тиском радянської влади, підготовка до псевдособору 1946 року.</p>" 
+            id: 9, name: "Москва", coords: [55.7558, 37.6173], icon: "fa-file-signature", image: "12.jpg", 
+            imgCaption: "Гавриїл Костельник під час наступних відвідин Москви. 1948 рік", 
+            desc: "<p class='popup-desc'>В 1944 році Радянський Союз повернувся на територію Галичини вдруге – і було ясно що цього разу на значно довший період. Андрей Шептицький вирішив відправити делегацію до Москви з метою налагодження контактів з радянською владою однак 1 листопада помер.</p><p class='popup-desc'>Делегацію до Москви відправив 18 грудня 1944 року вже митрополит Йосиф Сліпий. Очолював делегацію архімандрит Климентій Шептицький. До складу делегації входив і отець Гавриїл Костельник. З собою делегація везла листи до Сталіна від Шептицького та Сліпого, а також сто тисяч рублів, зібраних для Червоного Хреста. Сподівання делегації на зустріч зі Сталіним були наївними.</p><p class='popup-desc'> Натомість делегація стала жертвою спецоперації НКДБ. Під легендою «армійських генералів-політпрацівників» з делегатами зустрілися зустрілися начальник контррозвідки НКДБ СРСР генерал-лейтенант Олександр Леонтьєв і начальник 4-го Управління Павло Судоплатов. Метою було переконати представників виступити посередниками між представниками радянської влади та українського націоналістичного підпілля.</p><p class='popup-desc'> Десь в цей самий час, Костельник починає схилятися до співпраці з радянською владою. 8 січня 1945 року в розмові з уповноваженим у справах релігійних культів при Раднаркомі УРСР Сергієм Даниленко (який насправді був начальником 4-го Управління НКДБ Сергієм Каріним), Костельник назвав даний візит в Москву – історичним.</p>" 
         },
         { 
             id: 10, name: "Сремські Карловці", coords: [45.2025, 19.9342], icon: "fa-cross", image: "11.jpg",
             secondary: true, 
             imgCaption: "Обкладинка Граматики бачваньско-рускей бешеди.", 
-            desc: "<p class='popup-desc'>Попри переїзд до Львова, Костельник не поривав зв’язків зі своїм рідним краєм. Костельник цікавився рідною говіркою ще під час навчання в семінарії. А в 1919 році після розпаду Австро-Угорщини регіон Бачка став частиною Югославії. Політика мадяризації припинилася. 2 липня 1919 році бачванськими русаними було засноване Руске Народне Просвитне Дружство (далі – РНПД). Костельник активно підтримував звязки з членами цього товариства. Тож коли до Костельника звернулися священник Дюра Биндач і перший очільник РНПД Михал Мудри з проханням написати граматику бачвано-русинської говірки – він з радістю відгукнувся на їх прохання.  Граматика була написана і існувала в рукописі вже в 1921 році. Проте її видання затягнулося. Зрештою, в 1923 році РНПД таки видало Граматику бачваньско-рускей бешеди в Сремських Карловцях, у місцевій монастирській друкарні..</p>" 
-        }
+            desc: "<p class='popup-desc'>Попри переїзд до Львова, Костельник не поривав зв’язків зі своїм рідним краєм. Костельник цікавився рідною говіркою ще під час навчання в семінарії. А в 1919 році після розпаду Австро-Угорщини регіон Бачка став частиною Югославії. Політика мадяризації припинилася. 2 липня 1919 році бачванськими русаними було засноване Руске Народне Просвитне Дружство (далі – РНПД). Костельник активно підтримував звязки з членами цього товариства. Тож коли до Костельника звернулися священник Дюра Биндач і перший очільник РНПД Михал Мудри з проханням написати граматику бачвано-русинської говірки – він з радістю відгукнувся на їх прохання. Граматика була написана і існувала в рукописі вже в 1921 році. Проте її видання затягнулося. Зрештою, в 1923 році РНПД таки видало Граматику бачваньско-рускей бешеди в Сремських Карловцях, у місцевій монастирській друкарні. </p>"
+            }
     ];
 
-    // --- НОВИЙ ПОРЯДОК МАРШРУТУ ---
-    // Руський Керестур(0) – Винковці(1) – Загреб(2) – Львів(7) – Фрібург(4) – Львів(7) – Рим(3) – Львів(7) – Москва(8) – Львів(7)
     const pathOrder = [0, 1, 2, 7, 4, 7, 3, 7, 8, 7];
 
     function getBezierPoints(start, end, bend = 0.25) {
@@ -325,8 +519,6 @@
         const start = locations[pathOrder[i]].coords;
         const end = locations[pathOrder[i+1]].coords;
         
-        // Використовуємо сталий вигин 0.25. 
-        // Математика побудована так, що лінія "туди" і "назад" будуть автоматично вигинатися в різні боки.
         const curvePoints = getBezierPoints(start, end, 0.25);
         const line = L.polyline(curvePoints, { color: '#2c3e50', weight: 3, opacity: 0.5 }).addTo(map);
 
@@ -344,24 +536,34 @@
 
     const getColor = (loc) => {
         if (loc.isHub) return '#c0392b';
-        if (loc.name === "Рим") return '#8e44ad';
-        return '#2c3e50';
+        if (loc.name === "Руський Керестур") return '#8e44ad'; // Фіолетовий для місця народження
+        return '#2c3e50'; // Стандартний колір (в тому числі й для Риму)
     };
 
-    // --- ДАНІ ТА ЛОГІКА ДЛЯ ЛЬВОВА ---
+    // --- ДАНІ ДЛЯ ЛЬВОВА ---
     const lvivSlides = [
         { 
-            date: "1920–1944", 
-            title: "Період розквіту", 
-            text: "Професор Богословської академії, видатний проповідник у Соборі св. Юра, редактор журналу «Нива» текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст.",
-            img: "8.jpg"
+            date: "1907–1911", 
+            title: "Перший період", 
+            text: "В 1907 році Костельник вступає у Львівську духовну семінарію на другий курс. Також один семестр він навчається у Львівському університеті. Спершу Галичина справила на Костельника, як він сам висловлювався, «пригноблююче враження». Однак він став активно вивчати українську мову та почав писати нею публікації. В 1909 році він прочитує в семінарії розвідку «Шевченко з релігійно-етичного становища» . 1910 року вона виходить друком. На молодого та талановитого семінариста звернув увагу митрополит Андрей Шептицький. Закінчивши у 1911 році семінарію Костельник їде до Фрібурзького університету. Навчання там йому оплачував митрополит власними коштами, за що Костельник був дуже вдячний.",
+            img: "8.jpg",
+            imgCaption: "Студентські роки Гавриїла Костельника"
         },
         { 
-            date: "1948", 
-            title: "Трагічна загибель", 
-            text: "Убитий біля Преображенської церкви за досі нез'ясованих обставин після повернення з фатального відрядження.",
-            img: "8.jpg" // Заміни на потрібну назву файлу, якщо є (наприклад, 10.jpg)
+            date: "1915–1944", 
+            title: "Основний період життя та творчості Костельника", 
+            text: "Після здобуття ступеня доктора філософії та одруження Костельник приймає єрейські свячення. З початком Першої Світової Війни молоде подружжя покидає Галичину і перебуває деякий час у рідному селі Костельника, Руському Керестурі. Однак після повернення Галичини під контроль Австро-Угорщини в 1915 році Гавриїл та Елеонора переїжджають у Львів. Саме в цьому місті Гавриїл Костельник проведе решту свого життя та надрукує більшість своїх подальших праць. В 1915 році Костельник стає сотрудником у церкві Преображення Господа Нашого Ісуса Христа, що розташована на вулиці Краківській. З 1920 по 1929 рік він виконує обов’язки редактора «Ниви» – часопису греко-католицьких священників. Викладає низку предметів у Львівській семінарії та Львівській Богословській Академії. З часом Костельник став активно критикувати Ватикан і латинське богослов’я та досить гостро дискутувати з Йосифом Сліпим про роль схоластів і Томи Аквінського. Водночас він активно зацікавився темою стигматиків. При цьому Костельник активно критикував більшовиків і комуністичну ідеологію, вважаючи і комунізм і атеїзм релігіями. «Большевицька партія це релігійний орден. Сталін це найбільший ісповідник того ордену…» – писав Костельник у розвідці «Наполєон і Сталін як представники духа свого часу». Тож спроби КГБ схилити Костельника до співпраці під час першої окупації Галичини 1939-1941 років не мали успіху. «Наша зустріч з большевиками, це була зустріч двох культур, двох світів, в яких діють інші моральні, політичні й економічні закони […] Жадна держава так не мучила своїх підданих, як большевицька, що мучить не тільки тіло, але й душу в найглибших її глибинах. Це чортівський млин, що меле людей. Як не сьогодні, то завтра, як не завтра, то післязавтра на кожного мусить прийти черга загибелі»  – згадував Костельник.",
+            img: "9.jpg", 
+            imgCaption: "Костельник зі студентами та дітьми в Карпатах. Фото 1935 року."
+        },
+        { 
+            date: "1945–1948", 
+            title: "Львівський псевдособор", 
+            text: "В ніч на 12 квітня 1945 року було арештовано митрополита Сліпого та весь греко-католицький єпископат.  14 квітня Костельник у розмові з Каріним-Даниленко погодився очолити ініціативну групи з «возз’єднання» УГКЦ із РПЦ. Мотиви цього вчинку оцінити складно. Свою роль відіграв і тиск та погрози подальших арештів з боку органів держбезпеки, і особисті амбіції Костельника та віра в те що йому вдасться зберегти і модернізувати Церкву. «Мати оповідала, що покійний батько пішов на православізацію тільки з практичних міркувань, а ніколи з переконання. Він часто повторяв: «Якщо підпорядкуємось Московському патріярхові, збережемо нашу Греко-Католицьку Церкву, а в свій час скажемо слово, як певна організована сила».  – згадувала в інтерв’ю донька Костельника Христина. Москва виступала за те, щоб приймати греко-католицьких священиків в індивідуальному порядку. Натомість ідея єдиного собору, скоріш за все, народилася саме в колах Ініціативної групи. З одного боку, це посилювало вплив Костельника. З іншого боку – сприяло збереженню структур Греко-Католицької Церкви попри ліквідацію. Львівський псевдособор відбувся у березні 1946 року з 216 його учасників дві третини, 146 чоловік, – становили агенти НКДБ. Сам Костельник після псевдособору прожив тільки два роки. 20 вересня 1948 року священика було вбито.",
+            img: "13.jpg", 
+            imgCaption: "Отець Гавриїл Костельник та учасники Львівського псевдособору"
         }
+        
     ];
     let currentLvivSlide = 0;
     window.lvivMarkerRef = null;
@@ -374,28 +576,34 @@
                     <h3 style="margin: 0; padding-bottom: 5px; border: none;">Львів</h3>
                 </div>
                 <div class="lviv-popup-container">
-                    <div class="lviv-left">
-                        <img src="${s.img}" style="width: 200px; height: auto; float: left; margin: 0 15px 10px 0; object-fit: cover;" alt="Львів">
-                        <div class="lviv-nav-btns">
-    <button class="lviv-nav-btn" onclick="event.stopPropagation(); changeLvivSlide(-1)" ${currentLvivSlide === 0 ? 'disabled' : ''}>
-        <i class="fa-solid fa-chevron-left"></i>
-    </button>
-
-    <span style="font-size: 13px; font-weight: bold; color: #2c3e50;">
-        ${currentLvivSlide + 1} / ${lvivSlides.length}
-    </span>
-
-    <button class="lviv-nav-btn" onclick="event.stopPropagation(); changeLvivSlide(1)" ${currentLvivSlide === lvivSlides.length - 1 ? 'disabled' : ''}>
-        <i class="fa-solid fa-chevron-right"></i>
-    </button>
-</div>
-                    </div>
-                    <div class="lviv-right">
-                        <div class="popup-event" style="margin-bottom: 0; border-left: 3px solid #c0392b;">
+                    <div class="lviv-body">
+                        <div class="lviv-image-wrapper">
+                            <img src="${s.img}" alt="Львів">
+                            <p class="lviv-image-caption">
+                                <a href="javascript:void(0)" onclick="openSources()" class="source-link">${s.imgCaption || 'Джерело фото'}</a>
+                            </p>
+                        </div>
+                        
+                        <div class="popup-event" style="margin-bottom: 10px; border-left: 3px solid #c0392b;">
                             <span>${s.date}</span>
                             <b style="color: #c0392b; font-size: 15px; margin-top: 5px;">${s.title}</b>
-                            <p class="popup-desc" style="margin-top: 10px;">${s.text}</p>
                         </div>
+                        <p class="popup-desc">${s.text}</p>
+                        <div style="clear: both;"></div> 
+                    </div>
+
+                    <div class="lviv-nav-btns">
+                        <button class="lviv-nav-btn" onclick="event.stopPropagation(); changeLvivSlide(-1)" ${currentLvivSlide === 0 ? 'disabled' : ''}>
+                            <i class="fa-solid fa-chevron-left"></i> Назад
+                        </button>
+
+                        <span style="font-size: 13px; font-weight: bold; color: #2c3e50;">
+                            ${currentLvivSlide + 1} / ${lvivSlides.length}
+                        </span>
+
+                        <button class="lviv-nav-btn" onclick="event.stopPropagation(); changeLvivSlide(1)" ${currentLvivSlide === lvivSlides.length - 1 ? 'disabled' : ''}>
+                            Далі <i class="fa-solid fa-chevron-right"></i>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -414,25 +622,30 @@
     locations.forEach((loc, idx) => {
         const isSecondary = loc.secondary;
 
-const customIcon = L.divIcon({
-    className: 'marker-wrapper',
-    html: `<div class="marker-content" style="
-                background-color:${isSecondary ? '#95a5a6' : getColor(loc)};
-                width:${isSecondary ? '26px' : '36px'};
-                height:${isSecondary ? '26px' : '36px'};
-            ">
-           <i class="fa-solid ${loc.icon}" style="font-size:${isSecondary ? '12px' : '16px'}"></i>
-           ${!isSecondary ? `<div class="marker-number">${idx + 1}</div>` : ''}
-           </div>`,
-    iconSize: isSecondary ? [26, 26] : [36, 36],
-    iconAnchor: isSecondary ? [13, 13] : [18, 18]
-});
+        const customIcon = L.divIcon({
+            className: 'marker-wrapper',
+            html: `<div class="marker-content" style="
+                        background-color:${isSecondary ? '#95a5a6' : getColor(loc)};
+                        width:${isSecondary ? '26px' : '36px'};
+                        height:${isSecondary ? '26px' : '36px'};
+                    ">
+                   <i class="fa-solid ${loc.icon}" style="font-size:${isSecondary ? '12px' : '16px'}"></i>
+                   ${!isSecondary ? `<div class="marker-number">${idx + 1}</div>` : ''}
+                   </div>`,
+            iconSize: isSecondary ? [26, 26] : [36, 36],
+            iconAnchor: isSecondary ? [13, 13] : [18, 18]
+        });
 
-        const marker = L.marker(loc.coords, { icon: customIcon }).addTo(map);
+        // Виносимо місце народження на передній план
+        const markerOptions = { icon: customIcon };
+        if (loc.name === "Руський Керестур") {
+            markerOptions.zIndexOffset = 1000;
+        }
+
+        const marker = L.marker(loc.coords, markerOptions).addTo(map);
 
         if (loc.isHub) {
             window.lvivMarkerRef = marker;
-            // Додаємо клас lviv-popup-override для розширення вікна
             marker.bindPopup(getLvivHTML(), { autoPan: false, className: 'lviv-popup-override' });
         } else {
             let content = `
@@ -442,7 +655,9 @@ const customIcon = L.divIcon({
                     </div>
                     <div class="popup-photo-container">
                         <img src="${loc.image}" class="popup-photo" alt="${loc.name}">
-                        <p class="popup-photo-caption">${loc.imgCaption}</p>
+                        <p class="popup-photo-caption">
+                            <a href="javascript:void(0)" onclick="openSources()" class="source-link">${loc.imgCaption}</a>
+                        </p>
                     </div>
                     <div class="popup-body">
                         ${loc.desc}
@@ -473,19 +688,37 @@ const customIcon = L.divIcon({
         map.flyTo([48.0, 22.0], 5, { duration: 1.5 });
     });
 
-    // --- НОВА ПЛАШКА ЗАМІСТЬ ЛЕГЕНДИ ---
+    // --- ПЛАШКА З МОЖЛИВІСТЮ ЗГОРТАННЯ ---
     const authorInfo = L.control({ position: "bottomright" });
     authorInfo.onAdd = function () {
-        const div = L.DomUtil.create("div", "authors-box");
-        div.innerHTML = `
-    <b style="color: #2c3e50;">Автори:</b><br>
-    <span style="color: #7f8c8d;">Розробник: Стаценко Антон</span><br>
-    <span style="color: #7f8c8d;">Текст та дослідження: Стаценко Данило</span>
-`;
-        return div;
+        const container = L.DomUtil.create("div", "authors-container"); // Додано collapsed за замовчуванням
+        
+        container.innerHTML = `
+            <div class="authors-toggle" onclick="this.parentElement.classList.toggle('collapsed')">
+                <!-- ЗМІНЕНО: стрілка тепер вправо, щоб вказувати напрямок згортання (до краю) -->
+                <i class="fa-solid fa-chevron-right"></i>
+            </div>
+            <div class="authors-content">
+                <b style="color: #2c3e50;">Автори:</b><br>
+                <span style="color: #7f8c8d;">Розробник: Стаценко Антон</span><br>
+                <span style="color: #7f8c8d;">Текст та дослідження: Стаценко Данило</span>
+            </div>
+        `;
+        
+        // Вимикаємо клік по мапі, коли клікаємо по плашці
+        L.DomEvent.disableClickPropagation(container);
+        
+        return container;
     };
     authorInfo.addTo(map);
 
+function toggleSources() {
+    document.getElementById("sourcesPanel").classList.toggle("closed");
+}
+
+function openSources() {
+    document.getElementById("sourcesPanel").classList.remove("closed");
+}
 </script>
 </body>
 </html>
